@@ -155,3 +155,35 @@ input:focus {
     display: none;
   }
 }
+/* ===== LOADING INDICATOR (QANTAS) ===== */
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #e10600; /* Qantas red */
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.plane {
+  display: inline-block;
+  animation: taxi 1.2s linear infinite;
+}
+
+@keyframes taxi {
+  0% {
+    transform: translateX(-6px) rotate(0deg);
+  }
+  50% {
+    transform: translateX(6px) rotate(5deg);
+  }
+  100% {
+    transform: translateX(-6px) rotate(0deg);
+  }
+}
+
+.hidden {
+  display: none;
+}
