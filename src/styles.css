@@ -218,10 +218,13 @@ input:focus {
     height: 55vh;
   }
 }
+
 .aircraft-icon {
   width: 12px;
   height: 12px;
   background: #4da3ff;
   clip-path: polygon(50% 0%, 65% 100%, 50% 80%, 35% 100%);
+  transform-origin: center;
+  transition: transform 0.2s linear;
 }
 
