@@ -1,16 +1,90 @@
+/* ===== GLOBAL ===== */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: Arial, Helvetica, sans-serif;
+  background: #0e0e0e;
+  color: #fff;
+}
+
+/* ===== LAYOUT ===== */
+#app {
+  display: grid;
+  grid-template-columns: 280px 1fr 320px;
+  height: 100vh;
+}
+
+#map {
+  height: 100%;
+  width: 100%;
+}
+
+#sidebar {
+  background: #121212;
+  padding: 14px;
+  overflow-y: auto;
+  border-right: 1px solid #222;
+}
+
+#pilot-panel {
+  background: #161616;
+  padding: 14px;
+  overflow-y: auto;
+  border-left: 1px solid #222;
+}
+
+/* ===== HEADINGS ===== */
+#sidebar h2 {
+  margin: 0 0 14px;
+  font-size: 18px;
+  text-align: center;
+}
+
 .section {
   margin-bottom: 16px;
   border-bottom: 1px solid #222;
   padding-bottom: 10px;
 }
 
-.section h3 {
-  margin: 6px 0 8px;
-  font-size: 14px;
-  color: #aaa;
-  text-transform: uppercase;
+.section:last-child {
+  border-bottom: none;
 }
 
+/* ===== COLLAPSIBLE HEADERS ===== */
+.section-header {
+  margin: 6px 0 8px;
+  font-size: 13px;
+  color: #aaa;
+  text-transform: uppercase;
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+}
+
+.section-header::after {
+  content: "▾";
+  position: absolute;
+  right: 0;
+  transition: transform 0.2s ease;
+}
+
+.section[data-open="false"] .section-header::after {
+  transform: rotate(-90deg);
+}
+
+/* ===== SECTION BODY ===== */
+.section-body {
+  transition: max-height 0.2s ease, opacity 0.2s ease;
+}
+
+.section[data-open="false"] .section-body {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+}
+
+/* ===== FORM ELEMENTS ===== */
 label {
   display: block;
   font-size: 12px;
@@ -26,6 +100,11 @@ input {
   background: #1b1b1b;
   color: #fff;
   border: 1px solid #333;
+  border-radius: 4px;
+}
+
+input::placeholder {
+  color: #666;
 }
 
 input:focus {
@@ -33,7 +112,46 @@ input:focus {
   border-color: #4da3ff;
 }
 
+/* ===== CHECKBOX ===== */
 .checkbox {
   font-size: 13px;
   color: #ddd;
+}
+
+.checkbox input {
+  margin-right: 6px;
+}
+
+/* ===== PILOT PANEL ===== */
+#pilot-panel h3 {
+  margin-top: 0;
+}
+
+#pilot-panel p {
+  margin: 6px 0;
+  font-size: 14px;
+  color: #ddd;
+}
+
+/* ===== SCROLLBARS ===== */
+#sidebar::-webkit-scrollbar,
+#pilot-panel::-webkit-scrollbar {
+  width: 6px;
+}
+
+#sidebar::-webkit-scrollbar-thumb,
+#pilot-panel::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 4px;
+}
+
+/* ===== RESPONSIVE (basic) ===== */
+@media (max-width: 900px) {
+  #app {
+    grid-template-columns: 240px 1fr;
+  }
+
+  #pilot-panel {
+    display: none;
+  }
 }
