@@ -19,6 +19,7 @@ L.tileLayer(
 /* ===== STATE ===== */
 let pilots = [];
 let markers = [];
+let selectedMarker = null;
 
 /* ===== LOADING INDICATOR ===== */
 const loadingEl = document.getElementById("loading");
@@ -47,6 +48,7 @@ function applyFilters(list) {
 function clearMarkers() {
   markers.forEach(m => map.removeLayer(m));
   markers = [];
+  selectedMarker = null;
 }
 
 function renderMarkers(list) {
@@ -69,7 +71,27 @@ function renderMarkers(list) {
 
     const marker = L.marker([p.latitude, p.longitude], { icon }).addTo(map);
 
-    marker.on("click", () => showPilotInfo(p));
+    marker.on("click", () => {
+      // remove previous selection
+      if (selectedMarker) {
+        selectedMarker
+          .getElement()
+          ?.querySelector(".aircraft-icon")
+          ?.classList.remove("aircraft-selected");
+        selectedMarker.setZIndexOffset(0);
+      }
+
+      // set new selection
+      selectedMarker = marker;
+      marker
+        .getElement()
+        ?.querySelector(".aircraft-icon")
+        ?.classList.add("aircraft-selected");
+
+      marker.setZIndexOffset(1000);
+      showPilotInfo(p);
+    });
+
     markers.push(marker);
   });
 }
