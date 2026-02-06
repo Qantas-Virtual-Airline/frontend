@@ -14,7 +14,9 @@ L.tileLayer(
 let pilots = [];
 let markers = [];
 let selectedMarker = null;
+
 const markerByCallsign = new Map();
+const trailByCallsign = new Map();
 
 /* ===== LOADING ===== */
 const loadingEl = document.getElementById("loading");
@@ -43,6 +45,7 @@ function clearMarkers() {
   markers.forEach(m => map.removeLayer(m));
   markers = [];
   markerByCallsign.clear();
+  trailByCallsign.clear();
   selectedMarker = null;
 }
 
@@ -52,6 +55,8 @@ function renderMarkers(list) {
   list.forEach(p => {
     const key = p.callsign;
     const heading = p.heading ?? 0;
+    const speed = Math.max(p.groundspeed || 200, 100);
+    const duration = Math.max(30000 / speed, 0.3); // seconds
 
     let marker = markerByCallsign.get(key);
 
@@ -83,10 +88,30 @@ function renderMarkers(list) {
       });
 
       markerByCallsign.set(key, marker);
+      trailByCallsign.set(key, []);
     } else {
       marker.setLatLng([p.latitude, p.longitude]);
-      const el = marker.getElement()?.querySelector(".aircraft-icon");
-      if (el) el.style.transform = `rotate(${heading}deg)`;
+
+      const el = marker.getElement();
+      if (el) {
+        el.style.transitionDuration = `${duration}s`;
+        const plane = el.querySelector(".aircraft-icon");
+        if (plane) plane.style.transform = `rotate(${heading}deg)`;
+      }
+    }
+
+    /* ===== TRAILS ===== */
+    const trail = trailByCallsign.get(key) || [];
+    trail.push([p.latitude, p.longitude]);
+    if (trail.length > 6) trail.shift();
+    trailByCallsign.set(key, trail);
+
+    if (trail.length > 1) {
+      L.polyline(trail, {
+        color: "#4da3ff",
+        weight: 1,
+        opacity: 0.35
+      }).addTo(map);
     }
 
     nextMarkers.push(marker);
