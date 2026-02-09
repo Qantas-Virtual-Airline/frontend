@@ -17,6 +17,7 @@ let selectedMarker = null;
 
 const markerByCallsign = new Map();
 const trailByCallsign = new Map();
+let firLayer = null;
 
 /* ===== LOADING ===== */
 const loadingEl = document.getElementById("loading");
@@ -28,39 +29,52 @@ async function fetchVatsimPilots() {
   return data.pilots || [];
 }
 
-/* ===== FILTERS (QFA ONLY) ===== */
+/* ===== FILTERS ===== */
 function applyFilters(list) {
   return list.filter(p => {
     if (state.filters.airborneOnly && p.groundspeed < 30) return false;
 
-    if (
-      state.filters.callsign &&
-      !p.callsign.includes(state.filters.callsign.toUpperCase())
-    ) return false;
+    if (state.filters.callsign &&
+        !p.callsign.includes(state.filters.callsign.toUpperCase())) return false;
 
-    if (
-      state.filters.aircraft &&
-      !p.flight_plan?.aircraft?.includes(state.filters.aircraft.toUpperCase())
-    ) return false;
+    if (state.filters.aircraft &&
+        !p.flight_plan?.aircraft?.includes(state.filters.aircraft.toUpperCase())) return false;
 
-    if (
-      state.filters.dep &&
-      p.flight_plan?.departure !== state.filters.dep.toUpperCase()
-    ) return false;
+    if (state.filters.dep &&
+        p.flight_plan?.departure !== state.filters.dep.toUpperCase()) return false;
 
-    if (
-      state.filters.arr &&
-      p.flight_plan?.arrival !== state.filters.arr.toUpperCase()
-    ) return false;
+    if (state.filters.arr &&
+        p.flight_plan?.arrival !== state.filters.arr.toUpperCase()) return false;
 
-    // ✨ Altitude bands
     const alt = p.altitude || 0;
-    if (state.filters.altitudeBand === "LOW" && alt <= 10000) return false;
+    if (state.filters.altitudeBand === "LOW" && alt >= 10000) return false;
     if (state.filters.altitudeBand === "CRUISE" && (alt < 10000 || alt >= 30000)) return false;
-    if (state.filters.altitudeBand === "HIGH" && alt >= 30000) return false;
+    if (state.filters.altitudeBand === "HIGH" && alt < 30000) return false;
 
     return true;
   });
+}
+
+/* ===== FIR LAYER ===== */
+async function toggleFIR(show) {
+  if (show && !firLayer) {
+    const res = await fetch("./assets/fir.geojson");
+    const geo = await res.json();
+
+    firLayer = L.geoJSON(geo, {
+      style: {
+        color: "#00ffff",
+        weight: 1,
+        opacity: 0.6,
+        fillOpacity: 0
+      }
+    }).addTo(map);
+  }
+
+  if (!show && firLayer) {
+    map.removeLayer(firLayer);
+    firLayer = null;
+  }
 }
 
 /* ===== MARKERS ===== */
@@ -115,7 +129,6 @@ function renderMarkers(list) {
       }
     }
 
-    /* ===== TRAILS ===== */
     const trail = trailByCallsign.get(key) || [];
     trail.push([p.latitude, p.longitude]);
     if (trail.length > 6) trail.shift();
@@ -123,7 +136,7 @@ function renderMarkers(list) {
 
     if (trail.length > 1) {
       L.polyline(trail, {
-        color: "#e10600", // Qantas red
+        color: "#4da3ff",
         weight: 1,
         opacity: 0.35
       }).addTo(map);
@@ -147,7 +160,6 @@ function showPilotInfo(p) {
     <p><b>Route:</b> ${p.flight_plan?.departure || "—"} → ${p.flight_plan?.arrival || "—"}</p>
     <p><b>Altitude:</b> ${p.altitude} ft</p>
     <p><b>Speed:</b> ${p.groundspeed} kts</p>
-    <p><b>Heading:</b> ${p.heading ?? "—"}°</p>
   `;
 }
 
@@ -157,6 +169,7 @@ async function refresh() {
   try {
     pilots = await fetchVatsimPilots();
     renderMarkers(applyFilters(pilots));
+    await toggleFIR(state.filters.showFIR);
   } finally {
     loadingEl.classList.add("hidden");
   }
