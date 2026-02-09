@@ -55,9 +55,9 @@ function applyFilters(list) {
 
     // ✨ Altitude bands
     const alt = p.altitude || 0;
-    if (state.filters.altitudeBand === "LOW" && alt >= 10000) return false;
+    if (state.filters.altitudeBand === "LOW" && alt <= 10000) return false;
     if (state.filters.altitudeBand === "CRUISE" && (alt < 10000 || alt >= 30000)) return false;
-    if (state.filters.altitudeBand === "HIGH" && alt < 30000) return false;
+    if (state.filters.altitudeBand === "HIGH" && alt >= 30000) return false;
 
     return true;
   });
