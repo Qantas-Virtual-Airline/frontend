@@ -2,44 +2,81 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>QVA Live Map</title>
+  <title>VATSIM Radar</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- Leaflet -->
   <link
     rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    href="https://unpkg.com/leaflet/dist/leaflet.css"
   />
 
   <!-- App styles -->
-  <link rel="stylesheet" href="./src/styles.css" />
+  <link rel="stylesheet" href="./styles.css" />
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: #0b0e14;
+      color: #fff;
+      font-family: system-ui, sans-serif;
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Simple top bar */
+    #topbar {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 1000;
+      background: rgba(15, 18, 26, 0.9);
+      padding: 10px 14px;
+      border-radius: 6px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.4);
+    }
+
+    #topbar label {
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* FIR tooltip */
+    .fir-tooltip {
+      background: rgba(0, 0, 0, 0.75);
+      color: #00ffff;
+      border: none;
+      font-size: 12px;
+      padding: 2px 6px;
+    }
+  </style>
 </head>
+
 <body>
-  <div id="app">
-    <!-- SIDEBAR -->
-    <div id="sidebar">
-      <h2>QVA Live Map</h2>
 
-      <!-- Loading indicator -->
-      <div id="loading" class="loading hidden">
-        <span class="plane">✈️</span>
-        <span class="loading-text">Qantas traffic updating</span>
-      </div>
-    </div>
-
-    <!-- MAP -->
-    <div id="map"></div>
-
-    <!-- PILOT INFO PANEL -->
-    <div id="pilot-panel">
-      <h3>Pilot Info</h3>
-      <p>Select an aircraft</p>
-    </div>
+  <!-- Controls -->
+  <div id="topbar">
+    <label>
+      <input type="checkbox" id="firToggle" />
+      Show FIR boundaries
+    </label>
   </div>
 
-  <!-- Leaflet JS -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- Map -->
+  <div id="map"></div>
 
-  <!-- Main app -->
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+  <!-- App -->
   <script type="module" src="./src/main.js"></script>
 </body>
 </html>
