@@ -6,6 +6,7 @@ export const state = {
     dep: "",
     arr: "",
     airline: "",
-    altitudeBand: "" // LOW | CRUISE | HIGH
+    altitudeBand: "",
+    showFIR: false // ← Phase 3.3
   }
 };
