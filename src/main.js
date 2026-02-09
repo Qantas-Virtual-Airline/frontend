@@ -1,6 +1,3 @@
-import { renderSidebar } from "./ui/sidebar.js";
-import { state } from "./state/store.js";
-
 /* ===== MAP SETUP ===== */
 const map = L.map("map", { zoomControl: false }).setView([20, 0], 2);
 L.control.zoom({ position: "topright" }).addTo(map);
@@ -11,62 +8,33 @@ L.tileLayer(
 ).addTo(map);
 
 /* ===== STATE ===== */
-let pilots = [];
-let markers = [];
-let selectedMarker = null;
-
-const markerByCallsign = new Map();
-const trailByCallsign = new Map();
 let firLayer = null;
 
-/* ===== LOADING ===== */
-const loadingEl = document.getElementById("loading");
-
-/* ===== FETCH ===== */
-async function fetchVatsimPilots() {
-  const res = await fetch("https://data.vatsim.net/v3/vatsim-data.json");
-  const data = await res.json();
-  return data.pilots || [];
-}
-
-/* ===== FILTERS ===== */
-function applyFilters(list) {
-  return list.filter(p => {
-    if (state.filters.airborneOnly && p.groundspeed < 30) return false;
-
-    if (state.filters.callsign &&
-        !p.callsign.includes(state.filters.callsign.toUpperCase())) return false;
-
-    if (state.filters.aircraft &&
-        !p.flight_plan?.aircraft?.includes(state.filters.aircraft.toUpperCase())) return false;
-
-    if (state.filters.dep &&
-        p.flight_plan?.departure !== state.filters.dep.toUpperCase()) return false;
-
-    if (state.filters.arr &&
-        p.flight_plan?.arrival !== state.filters.arr.toUpperCase()) return false;
-
-    const alt = p.altitude || 0;
-    if (state.filters.altitudeBand === "LOW" && alt >= 10000) return false;
-    if (state.filters.altitudeBand === "CRUISE" && (alt < 10000 || alt >= 30000)) return false;
-    if (state.filters.altitudeBand === "HIGH" && alt < 30000) return false;
-
-    return true;
-  });
-}
-
-/* ===== FIR LAYER ===== */
+/* ===== FIR TOGGLE (ADSBEXCHANGE DIRECT) ===== */
 async function toggleFIR(show) {
   if (show && !firLayer) {
-    const res = await fetch("./assets/fir.geojson");
+    const res = await fetch(
+      "https://data.adsbexchange.com/firs.geojson"
+    );
     const geo = await res.json();
 
     firLayer = L.geoJSON(geo, {
-      style: {
+      style: feature => ({
         color: "#00ffff",
         weight: 1,
         opacity: 0.6,
         fillOpacity: 0
+      }),
+      onEachFeature: (feature, layer) => {
+        const name =
+          feature.properties?.name ||
+          feature.properties?.icao ||
+          "FIR";
+        layer.bindTooltip(name, {
+          sticky: true,
+          direction: "center",
+          className: "fir-tooltip"
+        });
       }
     }).addTo(map);
   }
@@ -77,105 +45,13 @@ async function toggleFIR(show) {
   }
 }
 
-/* ===== MARKERS ===== */
-function renderMarkers(list) {
-  const nextMarkers = [];
-
-  list.forEach(p => {
-    const key = p.callsign;
-    const heading = p.heading ?? 0;
-    const speed = Math.max(p.groundspeed || 200, 100);
-    const duration = Math.max(30000 / speed, 0.3);
-
-    let marker = markerByCallsign.get(key);
-
-    if (!marker) {
-      const icon = L.divIcon({
-        className: "",
-        html: `<div class="aircraft-icon" style="transform: rotate(${heading}deg)"></div>`,
-        iconSize: [12, 12],
-        iconAnchor: [6, 6]
-      });
-
-      marker = L.marker([p.latitude, p.longitude], { icon }).addTo(map);
-
-      marker.on("click", () => {
-        if (selectedMarker) {
-          selectedMarker.getElement()
-            ?.querySelector(".aircraft-icon")
-            ?.classList.remove("aircraft-selected");
-          selectedMarker.setZIndexOffset(0);
-        }
-
-        selectedMarker = marker;
-        marker.getElement()
-          ?.querySelector(".aircraft-icon")
-          ?.classList.add("aircraft-selected");
-
-        marker.setZIndexOffset(1000);
-        showPilotInfo(p);
-      });
-
-      markerByCallsign.set(key, marker);
-      trailByCallsign.set(key, []);
-    } else {
-      marker.setLatLng([p.latitude, p.longitude]);
-
-      const el = marker.getElement();
-      if (el) {
-        el.style.transitionDuration = `${duration}s`;
-        const plane = el.querySelector(".aircraft-icon");
-        if (plane) plane.style.transform = `rotate(${heading}deg)`;
-      }
-    }
-
-    const trail = trailByCallsign.get(key) || [];
-    trail.push([p.latitude, p.longitude]);
-    if (trail.length > 6) trail.shift();
-    trailByCallsign.set(key, trail);
-
-    if (trail.length > 1) {
-      L.polyline(trail, {
-        color: "#4da3ff",
-        weight: 1,
-        opacity: 0.35
-      }).addTo(map);
-    }
-
-    nextMarkers.push(marker);
+/* ===== UI HOOK ===== */
+/* assumes you have a checkbox like:
+   <input type="checkbox" id="firToggle">
+*/
+const firToggle = document.getElementById("firToggle");
+if (firToggle) {
+  firToggle.addEventListener("change", e => {
+    toggleFIR(e.target.checked);
   });
-
-  markers.forEach(m => {
-    if (!nextMarkers.includes(m)) map.removeLayer(m);
-  });
-
-  markers = nextMarkers;
 }
-
-/* ===== PILOT INFO ===== */
-function showPilotInfo(p) {
-  document.getElementById("pilot-panel").innerHTML = `
-    <h3>${p.callsign}</h3>
-    <p><b>Aircraft:</b> ${p.flight_plan?.aircraft || "N/A"}</p>
-    <p><b>Route:</b> ${p.flight_plan?.departure || "—"} → ${p.flight_plan?.arrival || "—"}</p>
-    <p><b>Altitude:</b> ${p.altitude} ft</p>
-    <p><b>Speed:</b> ${p.groundspeed} kts</p>
-  `;
-}
-
-/* ===== REFRESH ===== */
-async function refresh() {
-  loadingEl.classList.remove("hidden");
-  try {
-    pilots = await fetchVatsimPilots();
-    renderMarkers(applyFilters(pilots));
-    await toggleFIR(state.filters.showFIR);
-  } finally {
-    loadingEl.classList.add("hidden");
-  }
-}
-
-/* ===== INIT ===== */
-renderSidebar(() => renderMarkers(applyFilters(pilots)));
-refresh();
-setInterval(refresh, 30000);
