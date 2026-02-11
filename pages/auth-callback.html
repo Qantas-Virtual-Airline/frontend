@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Auth Callback</title>
+</head>
+<body>
+  <p>Logging you in…</p>
+
+  <script type="module">
+    import { saveSession } from "../src/auth/session.js";
+
+    const params = new URLSearchParams(window.location.search);
+
+    saveSession({
+      user: params.get("user"),
+      role: params.get("role")
+    });
+
+    window.location.href = "/pages/dashboard.html";
+  </script>
+</body>
+</html>
