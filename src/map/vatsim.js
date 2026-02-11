@@ -20,13 +20,21 @@ async function loadFIR() {
   }).addTo(map);
 }
 
-function aircraftIcon(heading) {
+function altitudeColor(flightLevel = 0) {
+  if (flightLevel < 100) return "#00ff6a";   // low
+  if (flightLevel < 250) return "#ffd000";   // medium
+  return "#ff4d4d";                          // high
+}
+
+function aircraftIcon(heading, flightLevel) {
+  const color = altitudeColor(flightLevel);
+
   return L.divIcon({
     className: "aircraft-icon",
     html: `
       <svg width="26" height="26" viewBox="0 0 24 24"
            style="transform: rotate(${heading}deg)">
-        <path fill="#e4002b"
+        <path fill="${color}"
           d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9L2 14v2l8-2.5V19l-2 1.5V22l3-1 3 1v-1.5L13 19v-5.5z"/>
       </svg>
     `,
@@ -59,9 +67,9 @@ async function loadVatsim() {
       opacity: 0.6
     }).addTo(trailLayer);
 
-    // Rotating aircraft icon
+    // Aircraft icon (altitude colored)
     L.marker([p.latitude, p.longitude], {
-      icon: aircraftIcon(p.heading ?? 0)
+      icon: aircraftIcon(p.heading ?? 0, p.flight_level ?? 0)
     })
       .bindPopup(`
         <strong>${p.callsign}</strong><br/>
