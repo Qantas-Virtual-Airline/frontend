@@ -16,12 +16,23 @@ async function loadFIR() {
   const fir = await res.json();
 
   L.geoJSON(fir, {
-    style: {
-      color: "#00c2ff",
-      weight: 2,
-      fillOpacity: 0.05
-    }
+    style: { color: "#00c2ff", weight: 2, fillOpacity: 0.05 }
   }).addTo(map);
+}
+
+function aircraftIcon(heading) {
+  return L.divIcon({
+    className: "aircraft-icon",
+    html: `
+      <svg width="26" height="26" viewBox="0 0 24 24"
+           style="transform: rotate(${heading}deg)">
+        <path fill="#e4002b"
+          d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9L2 14v2l8-2.5V19l-2 1.5V22l3-1 3 1v-1.5L13 19v-5.5z"/>
+      </svg>
+    `,
+    iconSize: [26, 26],
+    iconAnchor: [13, 13]
+  });
 }
 
 async function loadVatsim() {
@@ -32,14 +43,12 @@ async function loadVatsim() {
   const res = await fetch("https://data.vatsim.net/v3/vatsim-data.json");
   const data = await res.json();
 
-  const pilots = data.pilots.filter(p =>
-    p.callsign.startsWith("QFA")
-  );
+  const pilots = data.pilots.filter(p => p.callsign.startsWith("QFA"));
 
   pilots.forEach(p => {
     if (!p.latitude || !p.longitude) return;
 
-    // ---- TRAILS ----
+    // Trails
     if (!trails[p.callsign]) trails[p.callsign] = [];
     trails[p.callsign].push([p.latitude, p.longitude]);
     trails[p.callsign] = trails[p.callsign].slice(-25);
@@ -50,28 +59,25 @@ async function loadVatsim() {
       opacity: 0.6
     }).addTo(trailLayer);
 
-    // ---- AIRCRAFT DOT ----
-    L.circleMarker([p.latitude, p.longitude], {
-      radius: 6,
-      color: "#e4002b",
-      fillColor: "#e4002b",
-      fillOpacity: 0.9
+    // Rotating aircraft icon
+    L.marker([p.latitude, p.longitude], {
+      icon: aircraftIcon(p.heading ?? 0)
     })
-    .bindPopup(`
-      <strong>${p.callsign}</strong><br/>
-      ${p.departure} → ${p.arrival}<br/>
-      FL${p.flight_level}<br/>
-      GS ${p.groundspeed}kt
-    `)
-    .addTo(aircraftLayer);
+      .bindPopup(`
+        <strong>${p.callsign}</strong><br/>
+        ${p.departure} → ${p.arrival}<br/>
+        FL${p.flight_level}<br/>
+        HDG ${p.heading ?? "—"}°
+      `)
+      .addTo(aircraftLayer);
 
-    // ---- CALLSIGN LABEL ----
+    // Callsign label
     L.marker([p.latitude, p.longitude], {
       icon: L.divIcon({
         className: "aircraft-label",
         html: p.callsign,
         iconSize: [60, 16],
-        iconAnchor: [30, -10]
+        iconAnchor: [30, -18]
       })
     }).addTo(labelLayer);
   });
