@@ -56,4 +56,12 @@ body {
 .leaflet-pane path {
   transition: all 0.3s linear;
 }
+.aircraft-label {
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 600;
+  text-shadow: 0 0 4px #000;
+  pointer-events: none;
+  text-align: center;
+}
 
