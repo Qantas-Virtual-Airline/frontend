@@ -1,0 +1,21 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Australia FIR (Simplified)"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [112,-10],
+          [155,-10],
+          [155,-45],
+          [112,-45],
+          [112,-10]
+        ]]
+      }
+    }
+  ]
+}
