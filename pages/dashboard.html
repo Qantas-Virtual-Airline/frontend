@@ -10,11 +10,41 @@
 
   <main class="container">
     <h1>Pilot Dashboard</h1>
-    <p>Login required.</p>
-    <div class="placeholder">[ Stats, flights, graphs ]</div>
+
+    <section class="cards">
+      <div class="card">
+        <h3>Total Flights</h3>
+        <p id="totalFlights">—</p>
+      </div>
+      <div class="card">
+        <h3>Total Hours</h3>
+        <p id="totalHours">—</p>
+      </div>
+      <div class="card">
+        <h3>Rank</h3>
+        <p id="rank">—</p>
+      </div>
+    </section>
+
+    <section>
+      <h2>Recent Flights</h2>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Flight</th>
+            <th>Route</th>
+            <th>Hours</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody id="flightsTable"></tbody>
+      </table>
+    </section>
   </main>
 
   <div id="footer"></div>
+
   <script type="module" src="../main.js"></script>
+  <script type="module" src="../src/dashboard/ui.js"></script>
 </body>
 </html>
